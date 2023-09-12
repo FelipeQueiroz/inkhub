@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "inkhub",
+    "slug": "inkhub",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/inkhub_logo.png",
+    "userInterfaceStyle": "light",
+    "scheme": "inkhub",
+    "splash": {
+      "image": "./assets/playstore.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.felipequeiroz.inkhub"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/inkhub_logo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.felipequeiroz.inkhub"
+    },
+    "web": {
+      "favicon": "./assets/playstore.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "@config-plugins/detox",
+      "expo-router"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "09f10d68-e501-4248-b43d-077beb48b55a"
+      }
+    }
+  }
+}
