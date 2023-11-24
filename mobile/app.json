@@ -5,8 +5,8 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/inkhub_logo.png",
-    "userInterfaceStyle": "light",
-    "scheme": "inkhub",
+    "userInterfaceStyle": "dark",
+    "scheme": "com.felipequeiroz.inkhub",
     "splash": {
       "image": "./assets/playstore.png",
       "resizeMode": "contain",
@@ -32,7 +32,8 @@
     },
     "plugins": [
       "@config-plugins/detox",
-      "expo-router"
+      "expo-router",
+      "@react-native-google-signin/google-signin"
     ],
     "extra": {
       "router": {

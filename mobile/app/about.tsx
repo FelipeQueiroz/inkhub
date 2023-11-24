@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { BottomTabs } from '@/components/BottomTabs';
+import { BottomTabs } from '@/components/templates';
 import { About } from '@/screens/About/About';
 
 const AboutScreen = () => (

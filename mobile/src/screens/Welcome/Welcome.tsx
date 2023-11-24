@@ -1,35 +1,101 @@
-import { Image, Text, View } from 'react-native'; // @ts-ignore
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+import { useEffect, useState } from "react";
+import { Button, Image, Text, View } from "react-native"; // @ts-ignore
+import { Box } from "@/components/templates";
 
-import Logo from '../../../assets/inkhub_logo_nobg.png';
+import Logo from "../../../assets/inkhub_logo_nobg.png";
+import { router } from "expo-router";
 
-const Welcome = () => (
-  <View className="my-5 flex-1 items-center justify-between gap-1">
-    <View className="items-center pt-12">
-      <Image source={Logo} className="xl:trans h-32 w-32 xl:bg-transparent" />
-    </View>
-    <View className="items-center gap-2 px-2">
-      <Text className="text-center text-5xl font-bold">InkHub</Text>
-      <Text className="px-12 text-center text-2xl font-bold">
-        Conectando Tatuadores a Estúdios de Tatuagem
-      </Text>
-      <Text className="text-1xl px-10 text-center">
-        O InkHub é a solução que une tatuadores iniciantes com talento e
-        público, mas sem local, a estúdios de tatuagem que enfrentam tempos
-        ociosos e custos elevados de aluguel. Através do nosso aplicativo,
-        estúdios podem oferecer horários não utilizados, proporcionando a
-        tatuadores em ascensão a oportunidade de praticar sua arte em um
-        ambiente profissional. Essa colaboração beneficia ambos os lados,
-        tornando a tatuagem mais acessível e fomentando o crescimento da
-        indústria.
-      </Text>
-    </View>
-    <View className="text= items-center">
-      <Text>Felipe Queiroz de Magalhães Correia. RA: 21708413</Text>
-      <Text>Daniel Ferreira de Alencar Junior RA: 22006187</Text>
-      <Text>Igor Costa Farage Fonseca RA: 21951714</Text>
-      <Text>Nicolas Freitas Ribeiro RA: 21908996</Text>
-    </View>
-  </View>
-);
+WebBrowser.maybeCompleteAuthSession();
+
+const Welcome = () => {
+  const googleAuthConfig = {
+    iosClientId:
+      "417621700424-fj7prbt211grhaq48asa1r0qjjbv850e.apps.googleusercontent.com",
+    androidClientId:
+      "417621700424-cm5dq1k88dlrqpkn7v5cmugtkvq4jgoi.apps.googleusercontent.com",
+    webClientId:
+      "417621700424-itftt5n3adf01gncalang5e5rl32e9iv.apps.googleusercontent.com",
+    scopes: ["profile", "email"],
+  };
+  const [, response, promptAsync] = Google.useAuthRequest({
+    ...googleAuthConfig,
+    redirectUri: "com.felipequeiroz.inkhub://",
+  });
+
+  const [userInfo, setUserInfo] = useState(async () => {
+    const user = await AsyncStorage.getItem("@user");
+    if (user) {
+      router.replace("/auth/home");
+      return JSON.parse(user);
+    }
+    return null;
+  });
+
+  const getUserInfo = async (token: string) => {
+    if (!token) return;
+    try {
+      const responseUserInfo = await fetch(
+        "https://www.googleapis.com/userinfo/v2/me",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const user = await responseUserInfo.json();
+      await AsyncStorage.setItem("@user", JSON.stringify(user));
+      setUserInfo(user);
+      router.replace("/auth/home");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  async function handleSignInWithGoogle() {
+    const user = await AsyncStorage.getItem("@user");
+
+    if (!user) {
+      if (response?.type === "success") {
+        await getUserInfo(response.authentication?.accessToken as string);
+      }
+    } else {
+      setUserInfo(JSON.parse(user));
+    }
+  }
+
+  useEffect(() => {
+    handleSignInWithGoogle();
+  }, [response]);
+
+  return (
+    <Box>
+      <View className="my-5 flex-1  justify-between gap-1 ">
+        <View className="items-start px-3 pt-14">
+          <View className="rounded-3xl bg-white">
+            <Image
+              source={Logo}
+              className="xl:trans h-16 w-16 xl:bg-transparent"
+            />
+          </View>
+        </View>
+        <View className="flex-1 items-start gap-2 px-2">
+          <Text className="text-left text-5xl font-bold text-white">
+            Bem-vindo!
+          </Text>
+          <Text className="text-left text-2xl text-gray-500">
+            Faça o login para continuar
+          </Text>
+          <Text>{JSON.stringify(userInfo, null, 2)}</Text>
+          <Button title="Continuar com Google" onPress={() => promptAsync()} />
+          <Button
+            title="Deletar cache"
+            onPress={() => AsyncStorage.removeItem("@user")}
+          />
+        </View>
+      </View>
+    </Box>
+  );
+};
 
 export { Welcome };

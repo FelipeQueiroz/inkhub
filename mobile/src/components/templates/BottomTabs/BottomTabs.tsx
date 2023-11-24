@@ -2,7 +2,6 @@
 import { AntDesign } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
-
 const TabBarIcon = (props: any) => {
   return (
     <AntDesign

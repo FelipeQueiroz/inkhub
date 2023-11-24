@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "326321752398",
+    "project_id": "inkhub-398820",
+    "storage_bucket": "inkhub-398820.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:326321752398:android:b3e0315565de8fcae0761f",
+        "android_client_info": {
+          "package_name": "com.felipequeiroz.inkhub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkoi_KutP3JtySn8efVIdBqKMunRwaVV8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
