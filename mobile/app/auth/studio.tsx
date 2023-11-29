@@ -1,18 +1,18 @@
 import { Stack } from "expo-router";
-import { Home } from "@/screens/auth/Home/Home";
 import { BottomTabs, Box } from "@/components/templates";
+import { Studio } from "@/screens/auth/Studio/Studio";
 
-const AuthHomeScreen = () => (
+const AuthStudioScreen = () => (
   <Box>
     <Stack.Screen
       options={{
-        title: "AuthHome",
+        title: "AuthStudio",
         headerShown: false,
       }}
     />
-    <Home />
+    <Studio />
     <BottomTabs actived={"home"} />
   </Box>
 );
 
-export default AuthHomeScreen;
+export default AuthStudioScreen;

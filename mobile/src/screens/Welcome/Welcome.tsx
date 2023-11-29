@@ -3,10 +3,9 @@ import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { Button, Image, Text, View } from "react-native"; // @ts-ignore
-import { Box } from "@/components/templates";
-
 import Logo from "../../../assets/inkhub_logo_nobg.png";
 import { router } from "expo-router";
+import { Box } from "@/components/templates/Box/Box";
 
 WebBrowser.maybeCompleteAuthSession();
 

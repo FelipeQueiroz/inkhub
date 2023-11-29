@@ -26,10 +26,6 @@
       },
       "package": "com.felipequeiroz.inkhub"
     },
-    "web": {
-      "favicon": "./assets/playstore.png",
-      "bundler": "metro"
-    },
     "plugins": [
       "@config-plugins/detox",
       "expo-router",

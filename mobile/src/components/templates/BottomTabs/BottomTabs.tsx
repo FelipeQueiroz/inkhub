@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AntDesign } from '@expo/vector-icons';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+
 const TabBarIcon = (props: any) => {
   return (
     <AntDesign
@@ -17,33 +18,67 @@ const TabBarIcon = (props: any) => {
 }
 
 interface BottomTabsProps {
-  type?: 'home' | 'about';
+  actived?: "home" | "search" | "profile";
 }
 
-export const BottomTabs = ({ type }: BottomTabsProps) => {
+export const BottomTabs = ({ actived }: BottomTabsProps) => {
   return (
-    <View className="mx-24 mb-4 flex-row items-center  justify-between">
-      <Link href="/" asChild>
+    <View
+      className="px-24 py-5 rounded-t-3xl flex-row items-center  justify-between"
+      style={{ backgroundColor: "#30444E" }}
+    >
+      <Link href="/auth/search" asChild>
         <Pressable>
           <View
             className={`flex-row items-center rounded-2xl   p-2 ${
-              type === 'home' && 'border-2'
+              actived === "search" && "rounded-full"
             }`}
+            style={{
+              backgroundColor: actived === "search" ? "#7193A1" : "#30444E",
+            }}
           >
-            <TabBarIcon name="home" />
-            <Text className="ml-2">Home</Text>
+            <Ionicons
+              name="ios-search"
+              color={actived === "search" ? "#FFFFFF" : "#96A7AF"}
+              size={24}
+            />
           </View>
         </Pressable>
       </Link>
-      <Link href="/about" asChild>
+      <Link href="/auth/home" asChild>
         <Pressable>
           <View
             className={`flex-row items-center rounded-2xl   p-2 ${
-              type === 'about' && 'border-2'
+              actived === "home" && "rounded-full"
             }`}
+            style={{
+              backgroundColor: actived === "home" ? "#7193A1" : "#30444E",
+            }}
           >
-            <TabBarIcon name="infocirlceo" />
-            <Text className="ml-2">About</Text>
+            <Ionicons
+              name="home"
+              color={actived === "home" ? "#FFFFFF" : "#96A7AF"}
+              size={24}
+            />
+          </View>
+        </Pressable>
+      </Link>
+
+      <Link href="/auth/profile" asChild>
+        <Pressable>
+          <View
+            className={`flex-row items-center rounded-2xl   p-2 ${
+              actived === "profile" && "rounded-full"
+            }`}
+            style={{
+              backgroundColor: actived === "profile" ? "#7193A1" : "#30444E",
+            }}
+          >
+            <Ionicons
+              name="person"
+              color={actived === "profile" ? "#FFFFFF" : "#96A7AF"}
+              size={24}
+            />
           </View>
         </Pressable>
       </Link>
