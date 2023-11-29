@@ -2,10 +2,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
-import { Button, Image, Text, View } from "react-native"; // @ts-ignore
+import {
+  Button,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native"; // @ts-ignore
 import Logo from "../../../assets/inkhub_logo_nobg.png";
 import { router } from "expo-router";
 import { Box } from "@/components/templates/Box/Box";
+import { Ionicons } from "@expo/vector-icons";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -85,8 +93,20 @@ const Welcome = () => {
           <Text className="text-left text-2xl text-gray-500">
             Faça o login para continuar
           </Text>
-          <Text>{JSON.stringify(userInfo, null, 2)}</Text>
-          <Button title="Continuar com Google" onPress={() => promptAsync()} />
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={() => promptAsync()}
+          >
+            <Ionicons
+              name={"logo-google"}
+              size={24}
+              color={"#fff"}
+              style={{ marginRight: 10 }}
+            />
+            <Text className={"text-lg  text-white font-bold"}>
+              Continuar com Google
+            </Text>
+          </TouchableOpacity>
           <Button
             title="Deletar cache"
             onPress={() => AsyncStorage.removeItem("@user")}
@@ -96,5 +116,18 @@ const Welcome = () => {
     </Box>
   );
 };
+
+const styles = StyleSheet.create({
+  googleButton: {
+    backgroundColor: "#779CAB",
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "90%",
+    flexDirection: "row",
+    height: 50,
+    color: "#fff",
+  },
+});
 
 export { Welcome };

@@ -3,6 +3,7 @@ import { ImageBackground, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TabList } from "@/components/molecules/TabList/TabList";
 import { useState } from "react";
+import { AppointmentScheduler } from "@/components/molecules/AppointmentScheduler/AppointmentScheduler";
 
 export const Studio = () => {
   const [tabs, setTabs] = useState<string[]>([
@@ -101,6 +102,8 @@ export const Studio = () => {
               </Text>
             </View>
           )}
+
+          {actived === "Agenda" && <AppointmentScheduler />}
         </View>
       </View>
     </Box>
