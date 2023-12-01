@@ -22,7 +22,7 @@ export const ScheduleBox = ({
 
   return (
     <View
-      style={{ backgroundColor: "#30444E", width: 360 }}
+      style={{ backgroundColor: "#30444E", width: 350 }}
       className="px-4 py-2 mx-2 rounded-2xl"
     >
       <Text className="text-xl my-2 text-white">{txNameStudio}</Text>

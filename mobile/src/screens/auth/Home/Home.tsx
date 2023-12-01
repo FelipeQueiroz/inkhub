@@ -13,8 +13,12 @@ const Home = () => {
 
   const { data, isLoading } = useGetStudios();
 
-  const { data: schedulingData, isLoading: isLoadingScheduling } =
-    useGetSchedulings(Number(user?.id));
+  const {
+    data: schedulingData,
+    isLoading: isLoadingScheduling,
+    refetch,
+    isRefetching,
+  } = useGetSchedulings(Number(user?.id));
 
   const [scheduling, setScheduling] = useState<Scheduling[]>([]);
 
@@ -29,13 +33,14 @@ const Home = () => {
       const savedUser = await AsyncStorage.getItem("@user");
       const currentUser = JSON.parse(savedUser);
       setUser(currentUser);
+      await refetch();
     } catch (error) {
       console.log(error);
     }
   };
 
   useEffect(() => {
-    getUser();
+    getUser().then(() => refetch());
   }, []);
 
   return (

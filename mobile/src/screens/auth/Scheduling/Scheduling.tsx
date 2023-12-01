@@ -37,8 +37,15 @@ export const Scheduling = () => {
   };
 
   useEffect(() => {
-    getUser();
+    getUser().then(() => refetch());
   }, []);
+
+  if (!user?.id) {
+    return (
+      // You can render a loading state or any other component until user.id is available
+      <Text>teste</Text>
+    );
+  }
 
   return (
     <Box>
