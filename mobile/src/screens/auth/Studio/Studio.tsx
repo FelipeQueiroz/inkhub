@@ -1,22 +1,38 @@
 import { Box } from "@/components/templates";
-import { Image, ImageBackground, ScrollView, Text, View } from "react-native";
+import {
+  Image,
+  ImageBackground,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TabList } from "@/components/molecules/TabList/TabList";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppointmentScheduler } from "@/components/molecules/AppointmentScheduler/AppointmentScheduler";
 import { useLocalSearchParams } from "expo-router";
 import { useGetStudio } from "@/hooks/studios/studios";
 import useGetComments from "@/hooks/comments/comments";
 import { format } from "date-fns";
+import { Input } from "@/components/atoms/Input/Input";
+import axios from "axios";
+import { User } from "@/hooks/user/user";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const Studio = () => {
+  const [user, setUser] = useState<User | undefined>();
+  const [loadingSendComment, setLoadingSendComment] = useState<boolean>(false);
+  const [comment, setComment] = useState<string>("");
   const local = useLocalSearchParams();
 
   const { data } = useGetStudio(Number(local.id));
 
-  const { data: dataComments, isLoading: isLoadingComments } = useGetComments(
-    Number(local.id),
-  );
+  const {
+    data: dataComments,
+    isLoading: isLoadingComments,
+    refetch,
+  } = useGetComments(Number(local.id));
 
   const [tabs, setTabs] = useState<string[]>([
     "Descrição",
@@ -25,8 +41,45 @@ export const Studio = () => {
   ]);
   const [actived, setActived] = useState<string>("Descrição");
 
+  const getUser = async () => {
+    try {
+      const savedUser = await AsyncStorage.getItem("@user");
+      const currentUser = JSON.parse(savedUser);
+      setUser(currentUser);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getUser();
+  }, []);
+
   const onChange = (tab: string) => {
     setActived(tab);
+  };
+
+  const handleChangeComment = (text: string) => {
+    setComment(text);
+  };
+
+  const handleSubmitComment = async () => {
+    try {
+      setLoadingSendComment(true);
+      await axios.post(
+        "https://inkhub-api-production.up.railway.app/comments",
+        {
+          content: comment,
+          studio: Number(local.id),
+          user: Number(user?.id),
+        },
+      );
+      await refetch();
+      setLoadingSendComment(false);
+    } catch (e) {
+      console.log(e);
+      setLoadingSendComment(false);
+    }
   };
 
   return (
@@ -91,35 +144,65 @@ export const Studio = () => {
 
           {actived === "Comentários" && (
             <ScrollView
-              showsVerticalScrollIndicator={false}
-              style={{ height: 400 }}
+              automaticallyAdjustKeyboardInsets={true}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isLoadingComments}
+                  onRefresh={refetch}
+                />
+              }
             >
-              {dataComments?.map((comment) => (
-                <View
-                  className={"p-5 mt-4"}
-                  key={comment.id}
-                  style={{ backgroundColor: "#30444E", borderRadius: 20 }}
+              {isLoadingComments ? (
+                <Text className={"text-white text-2xl"}>Carregando...</Text>
+              ) : (
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  style={{ height: 333 }}
                 >
-                  <View className={"flex-row items-center justify-between"}>
-                    <View className={"flex-row items-center"}>
-                      <Image
-                        source={{ uri: comment.user.imageUrl }}
-                        style={{ width: 48, height: 48 }}
-                        className={"rounded-full"}
-                      />
-                      <Text className={"text-white ml-2 font-bold text-lg"}>
-                        {comment.user.name}
+                  {dataComments?.reverse().map((comment) => (
+                    <View
+                      className={"p-5 mt-4"}
+                      key={comment.id}
+                      style={{ backgroundColor: "#30444E", borderRadius: 20 }}
+                    >
+                      <View className={"flex-row items-center justify-between"}>
+                        <View className={"flex-row items-center"}>
+                          <Image
+                            source={{ uri: comment.user.imageUrl }}
+                            style={{ width: 48, height: 48 }}
+                            className={"rounded-full"}
+                          />
+                          <Text className={"text-white ml-2 font-bold text-lg"}>
+                            {comment.user.name}
+                          </Text>
+                        </View>
+                        <Text
+                          className={"text-lg"}
+                          style={{ color: "#96A7AF" }}
+                        >
+                          {format(new Date(comment.commentDate), "HH:mm")}
+                        </Text>
+                      </View>
+                      <Text className={"text-white mt-2 text-sm"}>
+                        {comment.content}
                       </Text>
                     </View>
-                    <Text className={"text-lg"} style={{ color: "#96A7AF" }}>
-                      {format(new Date(comment.commentDate), "HH:mm")}
-                    </Text>
-                  </View>
-                  <Text className={"text-white mt-2 text-sm"}>
-                    {comment.content}
-                  </Text>
-                </View>
-              ))}
+                  ))}
+                </ScrollView>
+              )}
+              <View className={"mt-2"}>
+                {loadingSendComment ? (
+                  <Text className={"text-white text-lg"}>Carregando...</Text>
+                ) : (
+                  <Input
+                    placeholder={"Adicionar um comentário"}
+                    onChangeText={handleChangeComment}
+                    value={comment}
+                    onPressIcon={handleSubmitComment}
+                    iconRight={"send"}
+                  />
+                )}
+              </View>
             </ScrollView>
           )}
         </View>

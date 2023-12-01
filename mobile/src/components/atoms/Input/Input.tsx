@@ -1,14 +1,16 @@
 import React from "react";
-import { StyleSheet, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 type InputProps = {
   placeholder: string;
   onChangeText: (text: string) => void;
+  onPressIcon?: () => void;
   value: string;
   iconLeft?: string;
   iconRight?: string;
   secureTextEntry?: boolean;
+
   keyboardType?:
     | "default"
     | "number-pad"
@@ -46,12 +48,14 @@ export const Input = (props: InputProps) => {
         {...props}
       />
       {hasRightIcon && (
-        <Ionicons
-          style={[styles.searchIcon, styles.rightIcon]}
-          name={props.iconRight}
-          size={20}
-          color="#96A7AF"
-        />
+        <Pressable onPress={props.onPressIcon}>
+          <Ionicons
+            style={[styles.searchIcon, styles.rightIcon]}
+            name={props.iconRight}
+            size={20}
+            color={props.value.length > 3 ? "#FFF" : "#96A7AF"}
+          />
+        </Pressable>
       )}
     </View>
   );
@@ -61,6 +65,8 @@ const styles = StyleSheet.create({
   searchIcon: {
     padding: 10,
     backgroundColor: "#2A3C44",
+    borderBottomRightRadius: 8,
+    borderTopRightRadius: 8,
   },
   input: {
     flex: 1,
