@@ -2,7 +2,6 @@
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { Pressable, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TabBarIcon = (props: any) => {
   return (
@@ -65,8 +64,8 @@ export const BottomTabs = ({ actived }: BottomTabsProps) => {
         </Pressable>
       </Link>
 
-      <Link href="/" asChild>
-        <Pressable onPress={() => AsyncStorage.removeItem("@user")}>
+      <Link href="/auth/profile" asChild>
+        <Pressable>
           <View
             className={`flex-row items-center rounded-2xl   p-2 ${
               actived === "profile" && "rounded-full"

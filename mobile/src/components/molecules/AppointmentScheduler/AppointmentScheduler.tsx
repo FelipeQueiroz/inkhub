@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { addDays, format, startOfWeek } from "date-fns";
+import { addDays, format, parse, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import axios from "axios";
+import { User } from "@/hooks/user/user";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Day {
   label: string;
@@ -35,12 +41,29 @@ const timeSlots: string[] = [
   "17:00",
 ];
 
-export const AppointmentScheduler: React.FC = () => {
+export const AppointmentScheduler = ({ studioId }: { studioId: number }) => {
+  const queryClient = useQueryClient();
+
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
   const [daysOfWeek, setDaysOfWeek] = useState<Day[]>(getDaysOfWeek());
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [user, setUser] = useState<User | undefined>();
+
+  const getUser = async () => {
+    try {
+      const savedUser = await AsyncStorage.getItem("@user");
+      const currentUser = JSON.parse(savedUser);
+      setUser(currentUser);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
+    getUser();
     setDaysOfWeek(getDaysOfWeek());
   }, []);
 
@@ -61,7 +84,46 @@ export const AppointmentScheduler: React.FC = () => {
   const isTimeSelected = (time: string) => {
     return selectedTimes.includes(time);
   };
-  console.log(selectedTimes);
+
+  const handleSchedule = async () => {
+    try {
+      setIsLoading(true);
+      if (selectedDay && selectedTimes.length > 0) {
+        const selectedDate = parse(selectedDay, "yyyy-MM-dd", new Date());
+
+        const startTime = selectedTimes[0];
+
+        const endTime = selectedTimes[selectedTimes.length - 1];
+
+        const dtStartSchedule = new Date(
+          `${selectedDate.toISOString().split("T")[0]}T${startTime}:00`,
+        );
+
+        const dtEndSchedule = new Date(
+          `${selectedDate.toISOString().split("T")[0]}T${endTime}:00`,
+        );
+        dtEndSchedule.setHours(dtEndSchedule.getHours() + 1);
+
+        const response = await axios.post(
+          "https://inkhub-api-production.up.railway.app/scheduling",
+          {
+            dtStartSchedule,
+            dtEndSchedule,
+            studioId,
+            userId: user?.id,
+          },
+        );
+
+        await queryClient.invalidateQueries();
+
+        Alert.alert("Agendamento realizado com sucesso!");
+        router.replace("/auth/scheduling");
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <View className={"rounded-3xl mt-2"}>
@@ -138,6 +200,8 @@ export const AppointmentScheduler: React.FC = () => {
         <View>
           <TouchableOpacity
             style={styles.submitButton}
+            onPress={handleSchedule}
+            disabled={isLoading}
             className={"w-full items-center align-middle flex-row mt-5"}
           >
             <Text
@@ -145,7 +209,7 @@ export const AppointmentScheduler: React.FC = () => {
                 "text-lg items-center text-center w-full text-white font-bold"
               }
             >
-              Agendar agora!
+              {isLoading ? "Carregando..." : "Agendar"}
             </Text>
           </TouchableOpacity>
         </View>

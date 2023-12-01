@@ -1,25 +1,28 @@
-import { Button, Image, ScrollView, Text, View } from "react-native";
+import { Image, ScrollView, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import { Box } from "@/components/templates/Box/Box";
-import { router } from "expo-router";
 import { ScheduleBox } from "@/components/molecules/ScheduleBox/ScheduleBox";
 import { StudioBox } from "@/components/molecules/StudioBox/StudioBox";
-
-interface IUser {
-  email: string;
-  family_name: string;
-  given_name: string;
-  id: string;
-  locale: string;
-  name: string;
-  picture: string;
-  verified_email: boolean;
-}
+import { useGetStudios } from "@/hooks/studios/studios";
+import useGetSchedulings, { Scheduling } from "@/hooks/scheduling/scheduling";
+import { User } from "@/hooks/user/user";
 
 const Home = () => {
-  const [search, setSearch] = useState<string>("");
-  const [user, setUser] = useState<IUser | undefined>();
+  const [user, setUser] = useState<User | undefined>();
+
+  const { data, isLoading } = useGetStudios();
+
+  const { data: schedulingData, isLoading: isLoadingScheduling } =
+    useGetSchedulings(Number(user?.id));
+
+  const [scheduling, setScheduling] = useState<Scheduling[]>([]);
+
+  useEffect(() => {
+    if (schedulingData) {
+      setScheduling(schedulingData);
+    }
+  }, [schedulingData]);
 
   const getUser = async () => {
     try {
@@ -31,66 +34,9 @@ const Home = () => {
     }
   };
 
-  const handleChangeText = (text: string) => {
-    setSearch(text);
-  };
-
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem("@user");
-    router.replace("/");
-  };
-
   useEffect(() => {
     getUser();
   }, []);
-
-  const mockupSchedule = [
-    {
-      id: 1,
-      txNameStudio: "Studio 1",
-      dtStartSchedule: "2023-12-10 10:00:00",
-      dtEndSchedule: "2023-12-10 11:00:00",
-    },
-    {
-      id: 2,
-      txNameStudio: "Studio 2",
-      dtStartSchedule: "2023-12-11 11:00:00",
-      dtEndSchedule: "2023-12-11 12:00:00",
-    },
-  ];
-
-  const mockupStudio = [
-    {
-      id: 1,
-      txNameStudio: "Studio 1",
-      txAddress: "Rua 1",
-      distance: "1.5km",
-      dateOpen: "2023-12-10 10:00:00",
-      dateClose: "2023-12-10 18:00:00",
-      txBackground:
-        "https://images.unsplash.com/photo-1608666599953-b951163495f4?q=80&w=3566&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-    {
-      id: 2,
-      txNameStudio: "Studio 2",
-      txAddress: "Rua 2",
-      dateOpen: "2023-12-10 10:00:00",
-      dateClose: "2023-12-10 18:00:00",
-      distance: "2.5km",
-      txBackground:
-        "https://images.unsplash.com/photo-1608666599953-b951163495f4?q=80&w=3566&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-    {
-      id: 3,
-      txNameStudio: "Studio 3",
-      txAddress: "Rua 3",
-      dateOpen: "2023-12-10 00:00:00",
-      dateClose: "2023-12-10 10:00:00",
-      distance: "3.5km",
-      txBackground:
-        "https://images.unsplash.com/photo-1608666599953-b951163495f4?q=80&w=3566&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    },
-  ];
 
   return (
     <Box>
@@ -98,32 +44,38 @@ const Home = () => {
         <View className="items-start px-4 pt-14">
           <View className={"flex-row w-full justify-between items-center"}>
             <Text className="text-5xl font-bold text-white">
-              Olá, {user?.given_name}
+              Olá, {user?.name.split(" ")[0]}
             </Text>
 
             <Image
-              source={{ uri: user?.picture }}
+              source={{ uri: user?.imageUrl }}
               style={{ width: 64, height: 64 }}
               className={"rounded-full"}
             />
           </View>
           <View className={"h-40"}>
-            <Text
-              className="text-2xl my-4 text-white"
-              style={{ color: "#96A7AF" }}
-            >
-              Agendamento
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {mockupSchedule.map((schedule) => (
-                <ScheduleBox
-                  key={schedule.id}
-                  txNameStudio={schedule.txNameStudio}
-                  dtStartSchedule={schedule.dtStartSchedule}
-                  dtEndSchedule={schedule.dtEndSchedule}
-                />
-              ))}
-            </ScrollView>
+            {isLoadingScheduling ? (
+              <Text className={"text-white text-2xl"}>Carregando...</Text>
+            ) : (
+              <>
+                <Text
+                  className="text-2xl my-4 text-white"
+                  style={{ color: "#96A7AF" }}
+                >
+                  {scheduling?.length > 0 ? "Agendamentos" : "Sem agendamentos"}
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {scheduling?.map((schedule) => (
+                    <ScheduleBox
+                      key={schedule.id}
+                      txNameStudio={schedule.studio.name}
+                      dtStartSchedule={schedule.dtStartSchedule}
+                      dtEndSchedule={schedule.dtEndSchedule}
+                    />
+                  ))}
+                </ScrollView>
+              </>
+            )}
           </View>
 
           <View>
@@ -134,20 +86,25 @@ const Home = () => {
               Estúdios próximos
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {mockupStudio.map((schedule) => (
-                <StudioBox
-                  key={schedule.id}
-                  txNameStudio={schedule.txNameStudio}
-                  dateOpen={schedule.dateOpen}
-                  dateClose={schedule.dateClose}
-                  distance={schedule.distance}
-                  background={schedule.txBackground}
-                />
-              ))}
+              {isLoading && !data ? (
+                <Text className={"text-white text-2xl"}>Carregando...</Text>
+              ) : (
+                <>
+                  {data?.map((studio) => (
+                    <StudioBox
+                      key={studio.id}
+                      id={studio.id}
+                      txNameStudio={studio.name}
+                      dateOpen={"2023-12-10 10:00:00"}
+                      dateClose={"2023-12-10 18:00:00"}
+                      distance={"2km"}
+                      background={studio.imageUrl}
+                    />
+                  ))}
+                </>
+              )}
             </ScrollView>
           </View>
-
-          <Button title={"Sair"} onPress={() => handleLogout()} />
         </View>
       </View>
     </Box>

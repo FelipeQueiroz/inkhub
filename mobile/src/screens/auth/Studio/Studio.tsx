@@ -1,11 +1,23 @@
 import { Box } from "@/components/templates";
-import { ImageBackground, Text, View } from "react-native";
+import { Image, ImageBackground, ScrollView, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TabList } from "@/components/molecules/TabList/TabList";
 import { useState } from "react";
 import { AppointmentScheduler } from "@/components/molecules/AppointmentScheduler/AppointmentScheduler";
+import { useLocalSearchParams } from "expo-router";
+import { useGetStudio } from "@/hooks/studios/studios";
+import useGetComments from "@/hooks/comments/comments";
+import { format } from "date-fns";
 
 export const Studio = () => {
+  const local = useLocalSearchParams();
+
+  const { data } = useGetStudio(Number(local.id));
+
+  const { data: dataComments, isLoading: isLoadingComments } = useGetComments(
+    Number(local.id),
+  );
+
   const [tabs, setTabs] = useState<string[]>([
     "Descrição",
     "Agenda",
@@ -17,44 +29,14 @@ export const Studio = () => {
     setActived(tab);
   };
 
-  const mockupStudio = {
-    id: 1,
-    txNameStudio: "TattoInk DF",
-    likes: 32,
-    txBackground:
-      "https://images.unsplash.com/photo-1608666599953-b951163495f4?q=80&w=3566&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    blockedDates: [
-      {
-        id: 1,
-        dtStart: "2023-12-10 10:00:00",
-        dtEnd: "2023-12-10 11:00:00",
-      },
-      {
-        id: 2,
-        dtStart: "2023-12-11 11:00:00",
-        dtEnd: "2023-12-11 12:00:00",
-      },
-    ],
-    comments: [
-      {
-        id: 1,
-        txComment: "Comentário 1",
-        txNameUser: "Usuário 1",
-        txPhotoUser:
-          "https://lh3.googleusercontent.com/a/ACg8ocJ5fODo0wYId1nzxJ0lQSsy7Uf8lmqYhQUqmtg5xI7ROeA=s96-c",
-      },
-    ],
-    txDescription:
-      "Bem-vindo à TattooInk DF, onde o passado encontra a pele. Nossa equipe de artistas apaixonados e talentosos está pronta para transformar suas ideias em obras-primas atemporais. Com um toque nostálgico e um estilo clássico, trazemos à vida a tradição das tatuagens old school, com cores vibrantes, linhas ousadas e designs que contam histórias. Entre em nossa loja e faça parte da história da tatuagem, onde cada tatuagem é uma homenagem à arte que transcende gerações.",
-  };
   return (
     <Box>
       <ImageBackground
-        source={{ uri: mockupStudio.txBackground }}
+        source={{ uri: data?.imageUrl }}
         style={{ width: "100%", height: 300 }}
       />
       <View
-        className=" justify-between gap-1 rounded-t-5xl "
+        className="justify-between gap-1 rounded-t-5xl "
         style={{
           marginTop: -120,
           height: 120,
@@ -66,12 +48,12 @@ export const Studio = () => {
         <View className="items-start pt-5">
           <View className={"px-4"}>
             <Text className={"text-white text-lg mb-2 font-bold"}>
-              {mockupStudio.txNameStudio}
+              {data?.name}
             </Text>
 
             <View className={" align-center flex-row "}>
               <Ionicons name={"heart"} color={"#96A7AF"} size={16} />
-              <Text className={"text-white "}> {mockupStudio.likes} likes</Text>
+              <Text className={"text-white "}> 148 likes</Text>
             </View>
           </View>
         </View>
@@ -98,12 +80,48 @@ export const Studio = () => {
                 Seja bem-vindo!
               </Text>
               <Text className={" text-sm mb-2 "} style={{ color: "#96A7AF" }}>
-                {mockupStudio.txDescription}
+                {data?.description}
               </Text>
             </View>
           )}
 
-          {actived === "Agenda" && <AppointmentScheduler />}
+          {actived === "Agenda" && (
+            <AppointmentScheduler studioId={Number(data?.id)} />
+          )}
+
+          {actived === "Comentários" && (
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={{ height: 400 }}
+            >
+              {dataComments?.map((comment) => (
+                <View
+                  className={"p-5 mt-4"}
+                  key={comment.id}
+                  style={{ backgroundColor: "#30444E", borderRadius: 20 }}
+                >
+                  <View className={"flex-row items-center justify-between"}>
+                    <View className={"flex-row items-center"}>
+                      <Image
+                        source={{ uri: comment.user.imageUrl }}
+                        style={{ width: 48, height: 48 }}
+                        className={"rounded-full"}
+                      />
+                      <Text className={"text-white ml-2 font-bold text-lg"}>
+                        {comment.user.name}
+                      </Text>
+                    </View>
+                    <Text className={"text-lg"} style={{ color: "#96A7AF" }}>
+                      {format(new Date(comment.commentDate), "HH:mm")}
+                    </Text>
+                  </View>
+                  <Text className={"text-white mt-2 text-sm"}>
+                    {comment.content}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </View>
     </Box>

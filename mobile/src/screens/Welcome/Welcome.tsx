@@ -2,22 +2,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
-import {
-  Button,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native"; // @ts-ignore
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"; // @ts-ignore
 import Logo from "../../../assets/inkhub_logo_nobg.png";
 import { router } from "expo-router";
 import { Box } from "@/components/templates/Box/Box";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 WebBrowser.maybeCompleteAuthSession();
 
 const Welcome = () => {
+  const queryClient = useQueryClient();
   const googleAuthConfig = {
     iosClientId:
       "417621700424-fj7prbt211grhaq48asa1r0qjjbv850e.apps.googleusercontent.com",
@@ -32,6 +28,8 @@ const Welcome = () => {
     redirectUri: "com.felipequeiroz.inkhub://",
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const [userInfo, setUserInfo] = useState(async () => {
     const user = await AsyncStorage.getItem("@user");
     if (user) {
@@ -44,6 +42,7 @@ const Welcome = () => {
   const getUserInfo = async (token: string) => {
     if (!token) return;
     try {
+      setIsLoading(true);
       const responseUserInfo = await fetch(
         "https://www.googleapis.com/userinfo/v2/me",
         {
@@ -51,9 +50,58 @@ const Welcome = () => {
         },
       );
       const user = await responseUserInfo.json();
-      await AsyncStorage.setItem("@user", JSON.stringify(user));
-      setUserInfo(user);
-      router.replace("/auth/home");
+
+      const dataVerifyUser = await fetch(
+        `https://inkhub-api-production.up.railway.app/users/exists/${user.id}`,
+      );
+
+      const isUserExists = await dataVerifyUser.json();
+
+      if (isUserExists === false) {
+        // PEGAR ID DO USUARIO QUANDO VOLTAR DA RESPONSE E COLOCAR NO ASYNC STORAGE
+        const { data } = await axios.post(
+          "https://inkhub-api-production.up.railway.app/users",
+          {
+            googleId: user.id,
+            portifolioUrl: user.picture,
+            email: user.email,
+            name: user.name,
+            imageUrl: user.picture,
+          },
+        );
+
+        await AsyncStorage.setItem(
+          "@user",
+          JSON.stringify({
+            id: data.id,
+            googleId: data?.googleId,
+            portifolioUrl: data?.portifolioUrl,
+            email: data?.email,
+            name: data?.name,
+            imageUrl: data?.imageUrl,
+          }),
+        );
+        await queryClient.invalidateQueries();
+
+        router.replace("/auth/home");
+      } else {
+        await AsyncStorage.setItem(
+          "@user",
+          JSON.stringify({
+            id: isUserExists?.id,
+            googleId: isUserExists?.googleId,
+            portifolioUrl: isUserExists?.portifolioUrl,
+            email: isUserExists?.email,
+            name: isUserExists?.name,
+            imageUrl: isUserExists?.imageUrl,
+          }),
+        );
+
+        await queryClient.invalidateQueries();
+
+        router.replace("/auth/home");
+      }
+      setIsLoading(false);
     } catch (error) {
       console.log(error);
     }
@@ -77,25 +125,26 @@ const Welcome = () => {
 
   return (
     <Box>
-      <View className="my-5 flex-1  justify-between gap-1 ">
-        <View className="items-start px-3 pt-14">
+      <View className="my-5 flex-1 items-center justify-center">
+        <View className="items-start px-4 mb-5">
           <View className="rounded-3xl bg-white">
             <Image
               source={Logo}
-              className="xl:trans h-16 w-16 xl:bg-transparent"
+              className="xl:trans h-24 w-24 xl:bg-transparent"
             />
           </View>
         </View>
-        <View className="flex-1 items-start gap-2 px-2">
+        <View className="items-center gap-2 px-2">
           <Text className="text-left text-5xl font-bold text-white">
             Bem-vindo!
           </Text>
-          <Text className="text-left text-2xl text-gray-500">
+          <Text className="text-left text-2xl text-gray-500 mb-2">
             Faça o login para continuar
           </Text>
           <TouchableOpacity
             style={styles.googleButton}
             onPress={() => promptAsync()}
+            disabled={isLoading}
           >
             <Ionicons
               name={"logo-google"}
@@ -104,13 +153,9 @@ const Welcome = () => {
               style={{ marginRight: 10 }}
             />
             <Text className={"text-lg  text-white font-bold"}>
-              Continuar com Google
+              {isLoading ? "Carregando..." : "Entrar com o Google"}
             </Text>
           </TouchableOpacity>
-          <Button
-            title="Deletar cache"
-            onPress={() => AsyncStorage.removeItem("@user")}
-          />
         </View>
       </View>
     </Box>
@@ -122,8 +167,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#779CAB",
     borderRadius: 12,
     alignItems: "center",
+    paddingHorizontal: 40,
     justifyContent: "center",
-    width: "90%",
     flexDirection: "row",
     height: 50,
     color: "#fff",

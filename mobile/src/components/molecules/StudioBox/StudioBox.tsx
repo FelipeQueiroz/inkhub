@@ -9,6 +9,7 @@ type StudioBoxProps = {
   dateClose: string;
   distance: string;
   background: string;
+  id: number;
 };
 
 export const StudioBox = ({
@@ -17,6 +18,7 @@ export const StudioBox = ({
   distance,
   dateOpen,
   dateClose,
+  id,
 }: StudioBoxProps) => {
   const now = new Date();
 
@@ -39,9 +41,13 @@ export const StudioBox = ({
 
   const textColorClass = isOpen ? "text-green-500" : "text-red-500";
 
+  const handleNavigation = () => {
+    router.push({ pathname: `/auth/studio`, params: { id: `${id}` } });
+  };
+
   return (
     <TouchableOpacity
-      onPress={() => router.replace("/auth/studio")}
+      onPress={handleNavigation}
       style={{ backgroundColor: "#30444E", height: "auto" }}
       className="px-4 py-4 mx-5 my-5 w-80 max-h-96 rounded-2xl"
     >
